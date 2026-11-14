@@ -1,40 +1,151 @@
 # quirewise-pipeline
 
-Application-level conversion route composition for Quirewise.
+Application-level conversion and validation route composition for Quirewise.
 
-CMake target: `Quirewise::Pipeline`. Public header: `quirewise/pipeline.h`.
+`Quirewise::Pipeline` (CMake package `QuirewisePipeline`) is an independent,
+MIT-licensed C11 library. It is a composition layer: it owns no format reader or
+writer and depends on the installed Quirewise packages. It exports
+`qw_pipeline_convert_file`, `qw_pipeline_check_file` and `qw_pipeline_version`.
 
-## Capabilities
+## What it does
 
-- `qw_pipeline_convert_file` runs the registered document route first, then the
-  fallback routes the CLI needs: page containers (DjVu, PDG/PDZ, UVZ, CAJ,
-  CEB), subtitles, comic archives, structured data, CAD, SVG and audio checks.
-- `qw_pipeline_check_file` runs the same chain without writing output; a
-  partially readable page container is reported as `UNSUPPORTED`.
-- `qw_pipeline_version` reports the composition library version.
+- Converts one file to PDF, TXT or PNG by running the registered document route
+  first and, if it declines, the fallback routes the CLI needs: page containers
+  (DjVu, PDG/PDZ, UVZ, CAJ, CEB), subtitles, comic archives, structured data,
+  CAD, SVG and — for checks — audio packet scanning.
+- Checks one file through the same routes without writing output; fallbacks only
+  run when the document route declines.
+- Carries the application options that affect routing: raster page mode, PDZ
+  page selection, archive password and audio track.
+- Never overwrites an existing output path.
 
-The library owns no reader or writer of its own: it composes the installed
-Quirewise packages. The CLI keeps argument parsing, output naming and error
-presentation; it calls this package for the conversion/check chain.
+The package deliberately adds no second copy of any reader. `Quirewise::Document`
+owns the registered format routes; this library only decides which installed
+route handles the file and reports the most specific error it saw.
 
-## Dependencies
+## Requirements
 
-Runtime, Image, Page, PDG, Document, Data, Comic, Subtitle, Vector and Audio.
-Document and PDG bring their own transitive dependencies through their CMake
-configs.
+- C11 compiler and CMake 3.21 or newer.
+- Installed Quirewise Runtime, Image, Page, PDG, Document, Data, Comic, Subtitle,
+  Vector and Audio packages, found through `CMAKE_PREFIX_PATH`.
+- CTest for the test suite.
 
-## Limits
+## Build, test and install
 
-- The fallback routes add PDF output; `TXT` is only extended with the CAD text
-  inventory and `PNG` stays with the document raster route.
-- Existing output paths are never overwritten; a failed write removes the
-  partial file.
-- This package does not modify or extend PDG; PDG is consumed as installed.
-
-## Build
-
-```powershell
-cmake -S . -B build -DCMAKE_PREFIX_PATH=<install-prefix>
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH=/path/to/quirewise/install
 cmake --build build
-ctest --test-dir build
+ctest --test-dir build --output-on-failure
+cmake --install build --prefix /path/to/quirewise/install
 ```
+
+Shared builds are available with `-DQUIREWISE_BUILD_SHARED=ON`.
+
+## Use it from CMake
+
+```cmake
+find_package(QuirewisePipeline CONFIG REQUIRED)
+target_link_libraries(your_app PRIVATE Quirewise::Pipeline)
+```
+
+`QuirewisePipelineConfig.cmake` resolves all ten dependencies, so the prefix
+must contain every package listed under Requirements.
+
+## Quick start
+
+Convert an HTML file to PDF, then validate it:
+
+```c
+#include <quirewise/pipeline.h>
+#include <quirewise/status.h>
+
+#include <stdio.h>
+#include <string.h>
+
+int main(void)
+{
+    QwPipelineOptions options = QW_PIPELINE_OPTIONS_INIT;
+    QwConvertReport report;
+    int status;
+
+    memset(&report, 0, sizeof(report));
+    status = qw_pipeline_convert_file("input.html", "output.pdf",
+                                       QW_FORMAT_PDF, &options, &report);
+    if (status != QW_STATUS_OK) {
+        fprintf(stderr, "convert failed (%d): %s\n", status, report.note);
+        return 1;
+    }
+    printf("%zu page(s), %zu bytes\n", report.pages_written, report.output_size);
+
+    memset(&report, 0, sizeof(report));
+    status = qw_pipeline_check_file("input.html", &options, &report);
+    if (status != QW_STATUS_OK) {
+        fprintf(stderr, "check failed (%d): %s\n", status, report.note);
+        return 1;
+    }
+    puts("OK");
+    return 0;
+}
+```
+
+`output.pdf` must not exist before the call; the pipeline never overwrites.
+
+## API overview
+
+| Header | Purpose |
+|---|---|
+| `quirewise/pipeline.h` | composition entry points and options; includes `quirewise/convert.h` and therefore `quirewise/status.h` |
+
+| Task | Functions |
+|---|---|
+| Version | `qw_pipeline_version` |
+| Convert | `qw_pipeline_convert_file` |
+| Check | `qw_pipeline_check_file` |
+
+`QwPipelineOptions` fields: `raster_page_mode`, `pdz_page_rule`,
+`archive_password`, `audio_track`. Initialize with `QW_PIPELINE_OPTIONS_INIT`.
+
+## Behavior and limits
+
+- Paths, options and the archive password are borrowed for the call; the
+  library retains no pointers after returning.
+- `qw_pipeline_convert_file` accepts only `QW_FORMAT_PDF`, `QW_FORMAT_TXT` and
+  `QW_FORMAT_PNG`. Any other target returns `QW_STATUS_ERR_INVALID_ARGUMENT`.
+- Fallback routes add PDF only. For TXT, the only fallback is the CAD text
+  inventory; PNG is handled by the document route alone.
+- Convert order: document route → page containers → subtitles → comics →
+  structured data → CAD → SVG. Check order: document route → page → subtitle →
+  comic → data → CAD → SVG → audio.
+- A failed conversion reports the first concrete route error, not the generic
+  "no renderer" status. `QW_STATUS_ERR_UNSUPPORTED` means no route accepted the
+  file.
+- Existing output paths are never overwritten; the call returns
+  `QW_STATUS_ERR_IO` and sets `report.note`. Fallback-route writes remove the
+  partial file if writing fails.
+- `qw_pipeline_check_file` discards generated bytes. A page container that is
+  only partially readable is reported as `QW_STATUS_ERR_UNSUPPORTED`, not
+  success.
+- Paths are UTF-8; on Windows the library opens them with `_wfopen`.
+- `pdz_page_rule`: 0 auto, 1 body, 2 body plus attachments, 3 all.
+- `raster_page_mode` is `QW_RASTER_PAGE_MODE_A4` or
+  `QW_RASTER_PAGE_MODE_IMAGE`; the pipeline default is `IMAGE`, unlike
+  `QwConvertOptions`.
+- `audio_track` is one-based for checks; 0 selects the default track.
+- The pipeline does not modify PDG; PDG is consumed as installed.
+
+## Testing
+
+`ctest` runs `quirewise_pipeline_routes`, which converts HTML to PDF, verifies
+the `%PDF-` header, asserts that an existing output is not overwritten, checks
+the HTML, converts an SRT subtitle through the fallback chain, and rejects a
+junk file with `QW_STATUS_ERR_UNSUPPORTED`.
+
+## Documentation
+
+See [docs/usage.md](docs/usage.md) for route-order details, options, report
+fields and error handling recipes.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
