@@ -100,6 +100,7 @@ static void pipeline_convert_options(const QwPipelineOptions *options,
     if (!options) return;
     out->page_mode = options->raster_page_mode;
     out->zip_password = options->archive_password;
+    out->pdf_password = options->pdf_password;
     out->audio_track = options->audio_track;
 }
 

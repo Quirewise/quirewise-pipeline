@@ -27,11 +27,14 @@ typedef struct QwPipelineOptions {
     int pdz_page_rule;
     /* Optional CBZ/CBT/7z archive password. */
     const char *archive_password;
+    /* Optional user password for encrypted PDF input. */
+    const char *pdf_password;
     /* One-based audio track for check; 0 selects the default. */
     size_t audio_track;
 } QwPipelineOptions;
 
-#define QW_PIPELINE_OPTIONS_INIT { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, 0u }
+#define QW_PIPELINE_OPTIONS_INIT \
+    { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u }
 
 /* Version of the composition library, for diagnostics. */
 QW_API const char *qw_pipeline_version(void);
