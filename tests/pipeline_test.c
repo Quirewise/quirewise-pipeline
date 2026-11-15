@@ -78,6 +78,28 @@ int main(void)
     CHECK(qw_pipeline_check_file("pipeline-test.srt", &options, &report) ==
           QW_STATUS_OK);
 
+    /* Target-aware conversion: SRT reaches the subtitle writer instead of a
+     * PDF route, while PDF targets keep using the composition chain. */
+    remove("pipeline-test.vtt");
+    remove("pipeline-subtitle2.pdf");
+    memset(&report, 0, sizeof(report));
+    CHECK(qw_pipeline_convert_file_to_format("pipeline-test.srt",
+                                             "pipeline-test.vtt",
+                                             QW_FORMAT_VTT, &options,
+                                             &report) == QW_STATUS_OK);
+    {
+        FILE *file = fopen("pipeline-test.vtt", "rb");
+        char header[7] = {0};
+        CHECK(file != NULL);
+        CHECK(fread(header, 1u, 6u, file) == 6u);
+        fclose(file);
+        CHECK(memcmp(header, "WEBVTT", 6u) == 0);
+    }
+    CHECK(qw_pipeline_convert_file_to_format("pipeline-test.srt",
+                                             "pipeline-subtitle2.pdf",
+                                             QW_FORMAT_PDF, &options,
+                                             &report) == QW_STATUS_OK);
+
     CHECK(write_file("pipeline-junk.bin", junk, sizeof(junk) - 1u));
     CHECK(qw_pipeline_convert_file("pipeline-junk.bin", "pipeline-junk.pdf",
                                    QW_FORMAT_PDF, &options, &report) ==
@@ -88,7 +110,9 @@ int main(void)
     remove("pipeline-test.html");
     remove("pipeline-test.pdf");
     remove("pipeline-test.srt");
+    remove("pipeline-test.vtt");
     remove("pipeline-subtitle.pdf");
+    remove("pipeline-subtitle2.pdf");
     remove("pipeline-junk.bin");
     remove("pipeline-junk.pdf");
     puts("PASS: pipeline route composition (document, subtitle fallback, no overwrite, rejection)");

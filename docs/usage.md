@@ -140,7 +140,12 @@ Target semantics:
 - `QW_FORMAT_PNG` — document route only. A DjVu, CBZ or DXF file will not
   convert to PNG through the pipeline.
 
-Any other target is rejected before any file is touched.
+`qw_pipeline_convert_file_to_format` accepts the same three targets plus the
+family targets — JSON, JSON Lines, YAML, TOML, vCard, XML, SRT, WebVTT, LRC,
+MicroDVD, ASS, SSA, SAMI, SCC, CSV, TSV, HTML, Markdown, DOCX and EPUB — and hands them to
+the owning package's writer (document handles HTML/Markdown through the
+readers' HTML intermediate). It still never overwrites an output. Any other
+target returns `QW_STATUS_ERR_UNSUPPORTED` without touching the file.
 
 ## 7. Recipe: batch conversion
 

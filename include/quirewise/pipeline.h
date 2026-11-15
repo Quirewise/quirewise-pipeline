@@ -57,6 +57,20 @@ QW_API int qw_pipeline_check_file(const char *input_path,
                                   const QwPipelineOptions *options,
                                   QwConvertReport *report);
 
+/*
+ * Convert one file to any target the composition supports. PDF, TXT and PNG
+ * use the full route chain above. Other targets (JSON, JSON Lines, YAML,
+ * TOML, vCard, XML, SRT, WebVTT, LRC, MicroDVD, ASS, SSA, SAMI, SCC, CSV and
+ * TSV) are routed to the package that owns the writer, using the input
+ * extension and content to pick the parser. The output extension is not
+ * validated here; callers that follow the CLI contract check it themselves.
+ */
+QW_API int qw_pipeline_convert_file_to_format(const char *input_path,
+                                              const char *output_path,
+                                              QwOutputFormat target,
+                                              const QwPipelineOptions *options,
+                                              QwConvertReport *report);
+
 #ifdef __cplusplus
 }
 #endif

@@ -5,7 +5,8 @@ Application-level conversion and validation route composition for Quirewise.
 `Quirewise::Pipeline` (CMake package `QuirewisePipeline`) is an independent,
 MIT-licensed C11 library. It is a composition layer: it owns no format reader or
 writer and depends on the installed Quirewise packages. It exports
-`qw_pipeline_convert_file`, `qw_pipeline_check_file` and `qw_pipeline_version`.
+`qw_pipeline_convert_file`, `qw_pipeline_convert_file_to_format`,
+`qw_pipeline_check_file` and `qw_pipeline_version`.
 
 ## What it does
 
@@ -13,6 +14,13 @@ writer and depends on the installed Quirewise packages. It exports
   first and, if it declines, the fallback routes the CLI needs: page containers
   (DjVu, PDG/PDZ, UVZ, CAJ, CEB), subtitles, comic archives, structured data,
   CAD, SVG and — for checks — audio packet scanning.
+- Converts one file to any other supported target with
+  `qw_pipeline_convert_file_to_format`: JSON, JSON Lines, YAML, TOML, vCard,
+  XML, SRT, WebVTT, LRC, MicroDVD, ASS, SSA, SAMI, SCC, CSV, TSV, HTML,
+  Markdown, DOCX and EPUB. The data, subtitle and worksheet targets are handed to the package
+  that owns the writer (`data`, `subtitle`, `spreadsheet`); HTML and Markdown
+  go through the document package. JSON↔YAML, SRT↔VTT and layout→HTML→Markdown
+  are real conversions rather than PDF round trips.
 - Checks one file through the same routes without writing output; fallbacks only
   run when the document route declines.
 - Carries the application options that affect routing: raster page mode, PDZ
@@ -100,7 +108,7 @@ int main(void)
 | Task | Functions |
 |---|---|
 | Version | `qw_pipeline_version` |
-| Convert | `qw_pipeline_convert_file` |
+| Convert | `qw_pipeline_convert_file`, `qw_pipeline_convert_file_to_format` |
 | Check | `qw_pipeline_check_file` |
 
 `QwPipelineOptions` fields: `raster_page_mode`, `pdz_page_rule`,
@@ -112,6 +120,19 @@ int main(void)
   library retains no pointers after returning.
 - `qw_pipeline_convert_file` accepts only `QW_FORMAT_PDF`, `QW_FORMAT_TXT` and
   `QW_FORMAT_PNG`. Any other target returns `QW_STATUS_ERR_INVALID_ARGUMENT`.
+  `qw_pipeline_convert_file_to_format` accepts those three plus the family
+  targets listed above; a target outside the supported set returns
+  `QW_STATUS_ERR_UNSUPPORTED`.
+- `QW_FORMAT_HTML` and `QW_FORMAT_MARKDOWN` use the document package's layout
+  intermediate: the reader's HTML is returned as-is or converted with
+  `quirewise-text`'s writer. PDF, image and subtitle inputs have no layout HTML.
+- `QW_FORMAT_HTML` and `QW_FORMAT_MARKDOWN` use the document package's layout
+  intermediate: the reader's HTML is returned as-is or converted with
+  `quirewise-text`'s writer. PDF, image and subtitle inputs have no layout HTML.
+- Family targets are parsed by the owning package using the input extension
+  (and, from memory, an unambiguous content sniff), then written by that
+  package's writer. A file from another family is refused with a
+  family-specific note; it is not silently treated as text.
 - Fallback routes add PDF only. For TXT, the only fallback is the CAD text
   inventory; PNG is handled by the document route alone.
 - Convert order: document route → page containers → subtitles → comics →
@@ -138,8 +159,9 @@ int main(void)
 
 `ctest` runs `quirewise_pipeline_routes`, which converts HTML to PDF, verifies
 the `%PDF-` header, asserts that an existing output is not overwritten, checks
-the HTML, converts an SRT subtitle through the fallback chain, and rejects a
-junk file with `QW_STATUS_ERR_UNSUPPORTED`.
+the HTML, converts an SRT subtitle through the fallback chain, converts SRT to
+WebVTT through the subtitle writer, and rejects a junk file with
+`QW_STATUS_ERR_UNSUPPORTED`.
 
 ## Documentation
 

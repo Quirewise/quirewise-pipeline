@@ -235,6 +235,27 @@ static int pipeline_check_routes(const char *input_path,
     return status;
 }
 
+/* PDF, TXT and PNG own the composition route chain; every other target is a
+ * family writer owned by the package that parses that family. */
+int qw_pipeline_convert_file_to_format(const char *input_path,
+                                       const char *output_path,
+                                       QwOutputFormat target,
+                                       const QwPipelineOptions *options,
+                                       QwConvertReport *report)
+{
+    QwConvertOptions convert;
+
+    if (!input_path || !output_path) return QW_STATUS_ERR_INVALID_ARGUMENT;
+    if (target == QW_FORMAT_PDF || target == QW_FORMAT_TXT ||
+        target == QW_FORMAT_PNG) {
+        return qw_pipeline_convert_file(input_path, output_path, target,
+                                        options, report);
+    }
+    pipeline_convert_options(options, &convert);
+    return qw_convert_file_to_format(input_path, output_path, target, &convert,
+                                     report);
+}
+
 int qw_pipeline_check_file(const char *input_path,
                            const QwPipelineOptions *options,
                            QwConvertReport *report)
