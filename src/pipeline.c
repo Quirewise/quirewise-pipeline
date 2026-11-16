@@ -109,6 +109,7 @@ static void pipeline_convert_options(const QwPipelineOptions *options,
     out->image_crop_bottom = options->image_crop_bottom;
     out->image_resize_width = options->image_resize_width;
     out->image_resize_height = options->image_resize_height;
+    out->sheet_index = options->sheet_index;
 }
 
 static int pipeline_check_routes(const char *input_path,

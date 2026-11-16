@@ -40,10 +40,11 @@ typedef struct QwPipelineOptions {
     unsigned image_crop_bottom;
     unsigned image_resize_width;
     unsigned image_resize_height;
+    unsigned sheet_index;
 } QwPipelineOptions;
 
 #define QW_PIPELINE_OPTIONS_INIT \
-    { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u, NULL, 0, 0, 0, 0, 0, 0 }
+    { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u, NULL, 0, 0, 0, 0, 0, 0, 0 }
 
 /* Version of the composition library, for diagnostics. */
 QW_API const char *qw_pipeline_version(void);
