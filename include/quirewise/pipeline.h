@@ -33,10 +33,17 @@ typedef struct QwPipelineOptions {
     size_t audio_track;
     /* Optional companion MDD resource file for MDX dictionaries. */
     const char *mdd_path;
+    /* Raster output edits applied by the image route. */
+    unsigned image_crop_left;
+    unsigned image_crop_top;
+    unsigned image_crop_right;
+    unsigned image_crop_bottom;
+    unsigned image_resize_width;
+    unsigned image_resize_height;
 } QwPipelineOptions;
 
 #define QW_PIPELINE_OPTIONS_INIT \
-    { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u, NULL }
+    { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u, NULL, 0, 0, 0, 0, 0, 0 }
 
 /* Version of the composition library, for diagnostics. */
 QW_API const char *qw_pipeline_version(void);
