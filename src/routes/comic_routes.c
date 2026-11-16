@@ -36,6 +36,8 @@ static int comic_extension_format(const char *path,
         *out = QW_COMIC_ARCHIVE_ZIP;
     } else if (comic_iequals(dot, "cbt")) {
         *out = QW_COMIC_ARCHIVE_USTAR;
+    } else if (comic_iequals(dot, "cb7")) {
+        *out = QW_COMIC_ARCHIVE_SEVEN_ZIP;
     } else {
         return 0;
     }
@@ -70,7 +72,7 @@ int qw_pipeline_comic_convert_file(const char *path,
     *out_size = 0u;
     if (!comic_extension_format(path, &format)) {
         if (report) snprintf(report->note, sizeof(report->note),
-                             "only CBZ/CBT comic archives are supported");
+                             "only CBZ/CBT/CB7 comic archives are supported");
         return QW_STATUS_ERR_UNSUPPORTED;
     }
     file = qw_pipeline_fopen_utf8(path, "rb");
