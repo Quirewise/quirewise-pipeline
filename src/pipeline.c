@@ -104,6 +104,7 @@ static void pipeline_convert_options(const QwPipelineOptions *options,
     out->audio_track = options->audio_track;
     out->mdd_path = options->mdd_path;
     out->pdf_font_path = options->pdf_font_path;
+    out->pdf_office_reflow = options->pdf_office_reflow;
     out->image_crop_left = options->image_crop_left;
     out->image_crop_top = options->image_crop_top;
     out->image_crop_right = options->image_crop_right;

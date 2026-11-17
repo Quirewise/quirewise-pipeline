@@ -36,6 +36,9 @@ typedef struct QwPipelineOptions {
     /* Optional TrueType font embedded in PDF output (NULL keeps the
      * predefined Helvetica/STSong-Light pair). */
     const char *pdf_font_path;
+    /* 1 = PDF -> DOCX/EPUB emits editable text paragraphs instead of
+     * one page image per page. */
+    int pdf_office_reflow;
     /* Raster output edits applied by the image route. */
     unsigned image_crop_left;
     unsigned image_crop_top;
