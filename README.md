@@ -10,17 +10,21 @@ writer and depends on the installed Quirewise packages. It exports
 
 ## What it does
 
-- Converts one file to PDF, TXT or PNG by running the registered document route
-  first and, if it declines, the fallback routes the CLI needs: page containers
-  (DjVu, PDG/PDZ, UVZ, CAJ, CEB), subtitles, comic archives, structured data,
-  CAD, SVG and — for checks — audio packet scanning.
+- Converts one file to PDF by running the registered document route first and,
+  if it declines, the fallback routes the CLI needs: page containers (DjVu,
+  PDG/PDZ, UVZ, CAJ, CEB, XPS), subtitles, comic archives including stored CBR
+  and CB7, structured data, CAD, SVG and — for checks — audio packet scanning.
+- Converts PDF input to TXT/HTML/Markdown, PNG/JPEG/BMP/TIFF/WebP (first page,
+  144 dpi) and DOCX/EPUB (120 dpi page images, up to 24 pages).
 - Converts one file to any other supported target with
   `qw_pipeline_convert_file_to_format`: JSON, JSON Lines, YAML, TOML, vCard,
-  XML, SRT, WebVTT, LRC, MicroDVD, ASS, SSA, SAMI, SCC, CSV, TSV, HTML,
-  Markdown, DOCX and EPUB. The data, subtitle and worksheet targets are handed to the package
-  that owns the writer (`data`, `subtitle`, `spreadsheet`); HTML and Markdown
-  go through the document package. JSON↔YAML, SRT↔VTT and layout→HTML→Markdown
-  are real conversions rather than PDF round trips.
+  XML, SRT, WebVTT, LRC, MicroDVD, ASS, SSA, SAMI, SCC, XLSX, ODS, CSV, TSV,
+  HTML, Markdown, DOCX, EPUB, HTMLZ, TXTZ, PMLZ and HWPX. The data, subtitle and
+  worksheet targets are handed to the package that owns the writer (`data`,
+  `subtitle`, `spreadsheet`); HTML and Markdown go through the document package.
+  JSON↔YAML, SRT↔VTT and layout→HTML→Markdown are real conversions rather than
+  PDF round trips. Decodable images can be re-encoded to the image package's
+  supported formats.
 - Checks one file through the same routes without writing output; fallbacks only
   run when the document route declines.
 - Carries the application options that affect routing: raster page mode, PDZ
@@ -57,8 +61,8 @@ find_package(QuirewisePipeline CONFIG REQUIRED)
 target_link_libraries(your_app PRIVATE Quirewise::Pipeline)
 ```
 
-`QuirewisePipelineConfig.cmake` resolves all ten dependencies, so the prefix
-must contain every package listed under Requirements.
+`QuirewisePipelineConfig.cmake` resolves its package dependencies, so the
+prefix must contain every package listed under Requirements.
 
 ## Quick start
 
