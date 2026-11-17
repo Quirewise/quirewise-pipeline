@@ -46,10 +46,10 @@ typedef struct QwPipelineOptions {
 #define QW_PIPELINE_OPTIONS_INIT \
     { QW_RASTER_PAGE_MODE_IMAGE, 0, NULL, NULL, 0u, NULL, 0, 0, 0, 0, 0, 0, 0 }
 
-/* Version of the composition library, for diagnostics. */
+/*! Version of the composition library, for diagnostics. */
 QW_API const char *qw_pipeline_version(void);
 
-/*
+/*!
  * Convert one file through the document route, then the fallback routes.
  * output_path is never overwritten. target is PDF, TXT or PNG; the fallback
  * routes only add PDF (and CAD text for TXT). On failure report carries the
@@ -61,7 +61,7 @@ QW_API int qw_pipeline_convert_file(const char *input_path,
                                     const QwPipelineOptions *options,
                                     QwConvertReport *report);
 
-/*
+/*!
  * Read/validate one file through the same route chain without writing an
  * output. A partially readable page container is reported as UNSUPPORTED,
  * matching the CLI --check contract.
@@ -70,7 +70,7 @@ QW_API int qw_pipeline_check_file(const char *input_path,
                                   const QwPipelineOptions *options,
                                   QwConvertReport *report);
 
-/*
+/*!
  * Convert one file to any target the composition supports. PDF, TXT and PNG
  * use the full route chain above. Other targets (JSON, JSON Lines, YAML,
  * TOML, vCard, XML, SRT, WebVTT, LRC, MicroDVD, ASS, SSA, SAMI, SCC, CSV and
