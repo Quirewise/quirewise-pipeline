@@ -33,6 +33,9 @@ typedef struct QwPipelineOptions {
     size_t audio_track;
     /* Optional companion MDD resource file for MDX dictionaries. */
     const char *mdd_path;
+    /* Optional TrueType font embedded in PDF output (NULL keeps the
+     * predefined Helvetica/STSong-Light pair). */
+    const char *pdf_font_path;
     /* Raster output edits applied by the image route. */
     unsigned image_crop_left;
     unsigned image_crop_top;
