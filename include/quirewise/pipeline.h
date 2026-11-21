@@ -39,6 +39,7 @@ typedef struct QwPipelineOptions {
     /* 1 = PDF -> DOCX/EPUB emits editable text paragraphs instead of
      * one page image per page. */
     int pdf_office_reflow;
+    int pdf_office_pages;
     /* QwPdfaLevel; QW_PDFA_1B requires an embedded font. */
     int pdfa_level;
     /* Raster output edits applied by the image route. */
